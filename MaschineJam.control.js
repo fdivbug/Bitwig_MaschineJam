@@ -14,8 +14,9 @@
  */
 
 loadAPI(1);
-var versionController = "5.31";
-host.defineController("Native Instruments", "Maschine Jam Marc Version", versionController, "ca344330-d262-4b84-97ce-20a02c55312e");
+var versionName = "Maschine Jam (fdivbug Version)";
+var versionController = "5.32";
+host.defineController("Native Instruments", versionName, versionController, "e165bb42-748c-4b45-92f6-0bff86ec39d2");
 host.defineMidiPorts(1, 1);
 host.addDeviceNameBasedDiscoveryPair(["Maschine Jam - 1"], ["Maschine Jam - 1"]);
 host.addDeviceNameBasedDiscoveryPair(["Maschine Jam - 2"], ["Maschine Jam - 2"]);
@@ -169,7 +170,7 @@ function init() {
 
 	handleblink();
     host.scheduleTask(handleBatchUpdate, null, 1);
-    println(" #### Maschine JAM Marc Version " + versionController + " ######");
+    println(" #### " + versionName + " v" + versionController + " ######");
        
 	notificationSettings = host.getNotificationSettings();
 	host.scheduleTask(function () {
