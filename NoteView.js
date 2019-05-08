@@ -83,6 +83,76 @@ function NoteView (noteInput) {
 		notes : [ 0, 1, 3, 4, 5, 7, 8, 10 ],
 		name : "Spanish Scale"
 	});
+	// The following are for a chromatic keyboard with only in-key notes highlighted
+	scales.push({
+		notes : [ 0, 2, 4, 5, 7, 9, 11 ],
+		name : "Chromatic Major"
+	});
+	scales.push({
+		notes : [ 0, 2, 3, 5, 7, 8, 10 ],
+		name : "Chromatic Minor"
+	});
+	scales.push({
+		notes : [ 0, 2, 4, 7, 9 ],
+		name : "Chromatic Maj Pent"
+	});
+	scales.push({
+		notes : [ 0, 3, 5, 7, 10 ],
+		name : "Chromatic Min Pent"
+	});
+	scales.push({
+		notes : [ 0, 2, 3, 5, 7, 9, 10 ],
+		name : "Chromatic Dorian"
+	});
+	scales.push({
+		notes : [ 0, 1, 3, 5, 7, 8, 10 ],
+		name : "Chromatic Phrygian"
+	});
+	scales.push({
+		notes : [ 0, 2, 4, 6, 7, 9, 11 ],
+		name : "Chromatic Lydian"
+	});
+	scales.push({
+		notes : [ 0, 2, 4, 5, 7, 9, 10 ],
+		name : "Chromatic Mixolydian"
+	});
+	scales.push({
+		notes : [ 0, 1, 3, 5, 6, 8, 10 ],
+		name : "Chromatic Locrian"
+	});
+	scales.push({
+		notes : [ 0, 2, 3, 5, 6, 8, 9, 10 ],
+		name : "Chromatic Dim"
+	});
+	scales.push({
+		notes : [ 0, 3, 4, 7, 9, 10 ],
+		name : "Chromatic Maj Blues"
+	});
+	scales.push({
+		notes : [ 0, 3, 4, 6, 7, 10 ],
+		name : "Chromatic Min Blues"
+	});
+	scales.push({
+		notes : [ 0, 2, 4, 6, 8, 10 ],
+		name : "Chromatic Whole"
+	});
+	scales.push({
+		notes : [ 0, 2, 4, 5, 6, 8, 10 ],
+		name : "Chromatic Arabian"
+	});
+	scales.push({
+		notes : [ 0, 2, 5, 7, 10 ],
+		name : "Chromatic Egyptian"
+	});
+	scales.push({
+		notes : [ 0, 2, 3, 6, 7, 8, 11 ],
+		name : "Chromatic Gypsi"
+	});
+	scales.push({
+		notes : [ 0, 1, 3, 4, 5, 7, 8, 10 ],
+		name : "Chromatic Spanish"
+	});
+
 
 	var scaleIndex = 0;
 
@@ -287,19 +357,21 @@ function NoteView (noteInput) {
 	this.changeScale = function(dir) {
 		if (dir > 0 && scaleIndex < scales.length - 1) {
 			scaleIndex = scaleIndex + 1;
-            docScales.set(scales[scaleIndex].name);
+			docScales.set(scales[scaleIndex].name);
 			if(active)
 				showCurrentScaleInfo();
 		} else if (dir < 0 && scaleIndex > 0) {
 			scaleIndex = scaleIndex - 1;
-            docScales.set(scales[scaleIndex].name);
-            if(active)
-                showCurrentScaleInfo();
+			docScales.set(scales[scaleIndex].name);
+			if(active)
+				showCurrentScaleInfo();
 		}
 	};
 
 	function transpose(semitones) {
-		var tmpScale = scales[scaleIndex].notes;
+		var tmpScale;
+		var isChromatic = false;
+		var chromaticInKey = [];
 
 		var newbase = baseNote + semitones;
 		if (newbase < 0 || newbase + 64 > 127) {
@@ -308,17 +380,35 @@ function NoteView (noteInput) {
 		}
 
 		baseNote = newbase;
-		noteToIndex = {}; 
+		noteToIndex = {};
+
+		if (scales[scaleIndex].name.indexOf("Chromatic") === 0) {
+			isChromatic = true;
+			tmpScale = scales[0].notes;
+			// Build an array of notes in this key.
+			for (i = 0 ; i < scales[scaleIndex].notes.length ; i++) {
+				var tmpnote = scales[scaleIndex].notes[i] + baseNote % 12;
+				if (tmpnote > 11) {
+					tmpnote = tmpnote - 12;
+				}
+				chromaticInKey.push(tmpnote);
+			}
+		} else {
+			tmpScale = scales[scaleIndex].notes;
+		}
 
 		for (i = 0; i < 64; i++) {
 			//var octOffset = Math.floor((i + 4) / tmpScale.length);
 			//var index = (i + 4) % tmpScale.length;
 			//var notevalue = baseNote + tmpScale[index] + octOffset * 12;
 
-
-            var newIndex = i - 5 * Math.floor(i / 8);
+			if (isChromatic) {
+				var newIndex = i - 3 * Math.floor(i / 8);
+			} else {
+				var newIndex = i - 5 * Math.floor(i / 8);
+			}
             var octOffset = Math.floor(newIndex / tmpScale.length);
-            index = newIndex % tmpScale.length;
+			index = newIndex % tmpScale.length;
 			var notevalue = baseNote + tmpScale[index] + octOffset * 12;
 
 
@@ -327,6 +417,8 @@ function NoteView (noteInput) {
 			var colIndex = i % 8;
 			var noteIndex =  (7 - rowIndex) * 8 + colIndex;
 
+			//println("newIndex: " + newIndex + " octOffset: " + octOffset + " index: " + index + " notevalue: " + notevalue + " rowIndex: " + rowIndex + " colIndex: " + colIndex + " noteIndex: " + noteIndex);
+			//println("row: " + rowIndex + " col: " + colIndex + " cIK: " + chromaticInKey + " notevalue: " + notevalue + " base notevalue: " + notevalue % 12 + " cIK idx: " + chromaticInKey.indexOf(notevalue % 12));
 
 			if (notevalue > 127) {
 				noteTable[22 + noteIndex] = -1;
@@ -342,11 +434,18 @@ function NoteView (noteInput) {
 				colortable[noteIndex] = baseNoteColor;
 				oncolortable[noteIndex] = baseNoteOnColor;
 			} else {
-				colortable[noteIndex] = baseColor;
-				oncolortable[noteIndex] = baseColor + 2;
+				if (isChromatic && chromaticInKey.indexOf(notevalue % 12) === -1) {
+					// Note isn't in key so don't light it.
+					colortable[noteIndex] = 0;
+					oncolortable[noteIndex] = 0;
+				} else {
+					colortable[noteIndex] = baseColor;
+					oncolortable[noteIndex] = baseColor + 2;
+				}
 			}
-			if(active)
+			if(active) {
 				controls.buttonMatrix.sendValue(noteIndex, colortable[noteIndex], true);
+			}
 		}
 		if(active)
 			noteInput.setKeyTranslationTable(noteTable);
